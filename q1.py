@@ -3,6 +3,7 @@
 ####################################
 # funtion implementation
 import csv
+import re
 def read_data(file):
 	reader = csv.reader(open(file), delimiter=',')
 	output = list()
@@ -19,21 +20,43 @@ def cleanup(data):
 	# let 0 represent Clinton
 	# let 1 represent Trump
 	def cleanupHelper(element):
+                handle = element[0]
+                text = element[1]
 		# 1st field: allocate a value to corresponding person
-		if (element[0] == "HillaryClinton"):
-			element[0] = 0
-		elif (element[0] == "realDonaldTrump"):
-			element[0] = 1
-		return element
-		# 2nd field: cleanup the words
 		
-
+		if (handle == "HillaryClinton"):
+			handle = 0
+		elif (handle == "realDonaldTrump"):
+			handle = 1
+		
+		# 2nd field: cleanup the words
+                text = re.sub('https://[^ ]+',' ',text)
+                text = re.sub('(#|@)[^ ]*',' ',text)   
+                text = re.sub('[^a-zA-Z0-9_\']', ' ', text)
+                text = re.sub('(\s|^)\'', ' ', text)
+                text = re.sub('\'\s', ' ', text)
+                text = re.sub('\s\s+', ' ', text)
+                text = text.lower()
+                
+                element[0] = handle
+                element[1] = text
+                return element
+        
 	map (cleanupHelper, data)
-	print data[0],data[-1]
+	print data[-1]
+	stop_words = ['a','0']
+	# just use the frist 5000 twitters as trainning set
+	dictionary = (''.join([x[1] for x in data[:4999]])).split()
+	dictionary.sort()
+	# filtering data if it is in the stop_words list
+	dictionary = filter(lambda x: x not in stop_words, dictionary)
+	
+	print dictionary[0:2000]
+	
 	
 
 
-	return 0
+	return data
 
 def train():
 	return 0
@@ -47,5 +70,5 @@ def predict():
 
 #####################################
 # run this file 
-cleanup(read_data("tweets.csv"))
+result = cleanup(read_data("tweets.csv"))
 
